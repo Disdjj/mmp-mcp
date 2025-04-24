@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * JSON-RPC请求类型定义
@@ -46,7 +46,7 @@ export interface MemoryNode {
   attention?: string;
   needInit?: boolean;
   format?: string;
-  type: 'json' | 'markdown' | 'xml' | 'plaintext';
+  type: "json" | "markdown" | "xml" | "plaintext";
   content?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -62,7 +62,7 @@ export interface MemoryTemplateNode {
   attention?: string;
   needInit: boolean;
   format?: string;
-  type: 'json' | 'markdown' | 'xml' | 'plaintext';
+  type: "json" | "markdown" | "xml" | "plaintext";
   content?: string;
 }
 
@@ -109,7 +109,7 @@ export interface AddNodeResponse {
 export interface GetNodeRequest {
   memoryId: string;
   path: string;
-  outputFormat?: 'xml' | 'json' | 'text';
+  outputFormat?: "xml" | "json" | "text";
 }
 
 /**
@@ -234,7 +234,7 @@ export interface ApplyTemplateResponse {
  * 记忆管理服务
  */
 class MemoryService {
-  private defaultMemoryId: string = '';
+  private defaultMemoryId: string = "";
 
   /**
    * 设置默认记忆ID
@@ -259,23 +259,23 @@ class MemoryService {
   private async sendRpcRequest(method: string, params: any): Promise<any> {
     const rpcEndpoint = process.env.MMP_RPC_ENDPOINT;
     if (!rpcEndpoint) {
-      throw new Error('RPC endpoint not configured');
+      throw new Error("RPC endpoint not configured");
     }
 
     try {
       const request: JsonRpcRequest = {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: uuidv4(),
         method,
-        params
+        params,
       };
 
       const response = await fetch(rpcEndpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
@@ -285,7 +285,9 @@ class MemoryService {
       const result: JsonRpcResponse = await response.json();
 
       if (result.error) {
-        throw new Error(`RPC error: ${result.error.message || JSON.stringify(result.error)}`);
+        throw new Error(
+          `RPC error: ${result.error.message || JSON.stringify(result.error)}`
+        );
       }
 
       return result.result;
@@ -300,8 +302,10 @@ class MemoryService {
    * @param params 创建记忆集合的参数
    * @returns Promise<CreateMemoryResponse>
    */
-  async createMemory(params: CreateMemoryRequest): Promise<CreateMemoryResponse> {
-    return this.sendRpcRequest('memManager.Create', params);
+  async createMemory(
+    params: CreateMemoryRequest
+  ): Promise<CreateMemoryResponse> {
+    return this.sendRpcRequest("memManager.Create", params);
   }
 
   /**
@@ -309,16 +313,18 @@ class MemoryService {
    * @param params 获取待初始化节点的参数
    * @returns Promise<GetInitNodesResponse>
    */
-  async getInitNodes(params: GetInitNodesRequest): Promise<GetInitNodesResponse> {
+  async getInitNodes(
+    params: GetInitNodesRequest
+  ): Promise<GetInitNodesResponse> {
     // 如果没有指定memoryId，使用默认值
-    const memoryId = params.memoryId || this.defaultMemoryId;
+    const memoryId = this.defaultMemoryId || params.memoryId;
     if (!memoryId) {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    return this.sendRpcRequest('memory.GetInitNodes', {
+    return this.sendRpcRequest("memory.GetInitNodes", {
       ...params,
-      memoryId
+      memoryId,
     });
   }
 
@@ -329,14 +335,14 @@ class MemoryService {
    */
   async addNode(params: AddNodeRequest): Promise<AddNodeResponse> {
     // 如果没有指定memoryId，使用默认值
-    const memoryId = params.memoryId || this.defaultMemoryId;
+    const memoryId = this.defaultMemoryId || params.memoryId;
     if (!memoryId) {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    return this.sendRpcRequest('memory.Add', {
+    return this.sendRpcRequest("memory.Add", {
       ...params,
-      memoryId
+      memoryId,
     });
   }
 
@@ -347,14 +353,14 @@ class MemoryService {
    */
   async getNode(params: GetNodeRequest): Promise<MemoryNode> {
     // 如果没有指定memoryId，使用默认值
-    const memoryId = params.memoryId || this.defaultMemoryId;
+    const memoryId = this.defaultMemoryId || params.memoryId;
     if (!memoryId) {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    return this.sendRpcRequest('memory.Get', {
+    return this.sendRpcRequest("memory.Get", {
       ...params,
-      memoryId
+      memoryId,
     });
   }
 
@@ -365,14 +371,14 @@ class MemoryService {
    */
   async listNodes(params: ListNodesRequest): Promise<ListNodesResponse> {
     // 如果没有指定memoryId，使用默认值
-    const memoryId = params.memoryId || this.defaultMemoryId;
+    const memoryId = this.defaultMemoryId || params.memoryId;
     if (!memoryId) {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    return this.sendRpcRequest('memory.List', {
+    return this.sendRpcRequest("memory.List", {
       ...params,
-      memoryId
+      memoryId,
     });
   }
 
@@ -383,14 +389,14 @@ class MemoryService {
    */
   async updateNode(params: UpdateNodeRequest): Promise<UpdateNodeResponse> {
     // 如果没有指定memoryId，使用默认值
-    const memoryId = params.memoryId || this.defaultMemoryId;
+    const memoryId = this.defaultMemoryId || params.memoryId;
     if (!memoryId) {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    return this.sendRpcRequest('memory.Update', {
+    return this.sendRpcRequest("memory.Update", {
       ...params,
-      memoryId
+      memoryId,
     });
   }
 
@@ -401,14 +407,14 @@ class MemoryService {
    */
   async deleteNode(params: DeleteNodeRequest): Promise<DeleteNodeResponse> {
     // 如果没有指定memoryId，使用默认值
-    const memoryId = params.memoryId || this.defaultMemoryId;
+    const memoryId = this.defaultMemoryId || params.memoryId;
     if (!memoryId) {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    return this.sendRpcRequest('memory.Delete', {
+    return this.sendRpcRequest("memory.Delete", {
       ...params,
-      memoryId
+      memoryId,
     });
   }
 
@@ -417,16 +423,18 @@ class MemoryService {
    * @param params 应用模板的参数
    * @returns Promise<ApplyTemplateResponse>
    */
-  async applyTemplate(params: ApplyTemplateRequest): Promise<ApplyTemplateResponse> {
+  async applyTemplate(
+    params: ApplyTemplateRequest
+  ): Promise<ApplyTemplateResponse> {
     // 如果没有指定memoryId，使用默认值
-    const memoryId = params.memoryId || this.defaultMemoryId;
+    const memoryId = this.defaultMemoryId || params.memoryId;
     if (!memoryId) {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    return this.sendRpcRequest('memManager.ApplyTemplate', {
+    return this.sendRpcRequest("memManager.ApplyTemplate", {
       ...params,
-      memoryId
+      memoryId,
     });
   }
 
@@ -437,20 +445,22 @@ class MemoryService {
    */
   async batchGetNodes(params: BatchGetRequest): Promise<MemoryNode[]> {
     // 处理每个请求中可能需要的默认memoryId
-    const requests = params.requests.map(req => ({
+    const requests = params.requests.map((req) => ({
       ...req,
-      memoryId: req.memoryId || this.defaultMemoryId
+      memoryId: this.defaultMemoryId || req.memoryId,
     }));
 
     // 检查每个请求是否都有memoryId
     for (const req of requests) {
       if (!req.memoryId) {
-        throw new Error("One or more requests have no memoryId and no default memoryId is set");
+        throw new Error(
+          "One or more requests have no memoryId and no default memoryId is set"
+        );
       }
     }
 
-    return this.sendRpcRequest('memory.Batch', {
-      requests
+    return this.sendRpcRequest("memory.Batch", {
+      requests,
     });
   }
 }

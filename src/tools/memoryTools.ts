@@ -5,12 +5,20 @@ import { ContentType } from "../types/index.js";
 // Tool definitions
 
 /**
+ * Helper function to get the current default memoryId description
+ */
+const getMemoryIdDescription = () => {
+  const defaultId = memoryService.getDefaultMemoryId();
+  return `Target memory collection ID in the format mm-{uuid}${defaultId ? `. Current default: ${defaultId}` : ""}`;
+};
+
+/**
  * memory.GetInitNodes tool - Get all nodes that need initialization
  */
 const getInitNodesSchema = z.object({
   memoryId: z
     .string()
-    .describe("Target memory collection ID in the format mm-{uuid}"),
+    .describe(getMemoryIdDescription()),
   filter: z
     .object({
       path: z.string().optional().describe("Path prefix filter"),
@@ -25,7 +33,7 @@ const getInitNodesSchema = z.object({
 const addNodeSchema = z.object({
   memoryId: z
     .string()
-    .describe("Target memory collection ID in the format mm-{uuid}"),
+    .describe(getMemoryIdDescription()),
   node: z
     .object({
       name: z.string().describe("Node name"),
@@ -54,7 +62,7 @@ const addNodeSchema = z.object({
 const getNodeSchema = z.object({
   memoryId: z
     .string()
-    .describe("Target memory collection ID in the format mm-{uuid}"),
+    .describe(getMemoryIdDescription()),
   path: z.string().describe("Path of the memory node to retrieve"),
   outputFormat: z
     .enum(["xml", "json", "text"])
@@ -69,7 +77,7 @@ const getNodeSchema = z.object({
 const listNodesSchema = z.object({
   memoryId: z
     .string()
-    .describe("Target memory collection ID in the format mm-{uuid}"),
+    .describe(getMemoryIdDescription()),
   filter: z
     .object({
       path: z.string().optional().describe("Path prefix filter"),
@@ -99,7 +107,7 @@ const listNodesSchema = z.object({
 const updateNodeSchema = z.object({
   memoryId: z
     .string()
-    .describe("Target memory collection ID in the format mm-{uuid}"),
+    .describe(getMemoryIdDescription()),
   path: z.string().describe("Path of the memory node to update"),
   updates: z
     .object({
@@ -122,7 +130,7 @@ const updateNodeSchema = z.object({
 const deleteNodeSchema = z.object({
   memoryId: z
     .string()
-    .describe("Target memory collection ID in the format mm-{uuid}"),
+    .describe(getMemoryIdDescription()),
   path: z.string().describe("Path of the memory node to delete"),
   recursive: z
     .boolean()
@@ -138,7 +146,7 @@ const batchGetNodesSchema = z.object({
   requests: z
     .array(
       z.object({
-        memoryId: z.string().describe("Memory ID"),
+        memoryId: z.string().describe(getMemoryIdDescription()),
         path: z.string().describe("Path of the memory node"),
       })
     )
@@ -167,7 +175,7 @@ const createMemorySchema = z.object({
 const applyTemplateSchema = z.object({
   memoryId: z
     .string()
-    .describe("Target memory collection ID in the format mm-{uuid}"),
+    .describe(getMemoryIdDescription()),
   template: z
     .array(
       z.object({
