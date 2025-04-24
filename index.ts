@@ -34,10 +34,10 @@ for (const tool of Object.values(memoryTools)) {
 }
 
 // Add server information prompt
-server.addPrompt({
+server.addTool({
   name: "mmp-info",
   description: "Get information about Model-Memory-Protocol",
-  load: async () => {
+  execute: async () => {
     let info = `
 # Model-Memory-Protocol (MMP)
 
@@ -76,10 +76,28 @@ MMP addresses the core challenge of long-term memory management for Large Langua
 
 ## Example Workflow
 
+### Get memory node content
+1. Use \`memory.List\` to get all memory nodes
+2. Use \`memory.Get\` to get the content of a specific memory node
+
+### Create a new memory collection
 1. First use \`memManager.Create\` to create a new memory collection
 2. Then use \`memory.Add\` to add memory nodes
 3. Use \`memory.Get\` to retrieve specific node content
 4. Browse the memory tree structure with \`memory.List\`
+
+### Apply a memory node template
+1. Use \`memManager.ApplyTemplate\` to apply a memory node template to a memory collection
+2. Use \`memory.Update\` to update the memory node
+3. Use \`memory.Get\` to retrieve specific node content
+4. Browse the memory tree structure with \`memory.List\`
+
+### Update memory node content
+1. Use \`memory.List\` to get all memory nodes
+2. Use \`memory.Get\` to get the content of a specific memory node
+3. Use \`memory.Update\` to update the content of a specific memory node
+
+
 `;
     return info;
   },
