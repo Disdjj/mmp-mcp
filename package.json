@@ -22,7 +22,7 @@
   "description": "Model Memory Protocol MCP - 一种用于AI模型记忆管理的开放协议实现",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.5.0",
-    "fastmcp": "^1.21.0",
+    "fastmcp": "1.22.4",
     "minimist": "^1.2.8",
     "zod": "^3.24.2",
     "uuid": "^9.0.1",

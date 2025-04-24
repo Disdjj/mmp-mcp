@@ -12,12 +12,10 @@ const defaultMemoryId = process.env.MMP_DEFAULT_MEMORY_ID || "";
 // Set default memoryId in memoryService if provided
 if (defaultMemoryId) {
   memoryService.setDefaultMemoryId(defaultMemoryId);
-  console.log(`Default memoryId set: ${defaultMemoryId}`);
 }
 
 // Log RPC endpoint if configured
 if (rpcEndpoint) {
-  console.log(`RPC endpoint configured: ${rpcEndpoint}`);
   // Set global RPC endpoint in process.env for use in services
   process.env.MMP_RPC_ENDPOINT = rpcEndpoint;
 }
@@ -35,7 +33,7 @@ for (const tool of Object.values(memoryTools)) {
 
 // Add server information prompt
 server.addTool({
-  name: "mmp-info",
+  name: "HOW_TO_USE_MMP",
   description: "Get information about Model-Memory-Protocol",
   execute: async () => {
     let info = `
@@ -64,38 +62,38 @@ MMP addresses the core challenge of long-term memory management for Large Langua
 
 ## Available Tools
 
-- memory.GetInitNodes: Retrieve all nodes that need initialization
-- memory.Add: Add a memory node to the specified memory tree
-- memory.Get: Retrieve a memory node from the specified path
-- memory.List: List memory nodes matching specified criteria
-- memory.Update: Update an existing memory node
-- memory.Delete: Delete a memory node with optional recursive deletion
-- memory.Batch: Batch retrieve multiple memory nodes
-- memManager.Create: Create a new memory collection with unique ID
-- memManager.ApplyTemplate: Apply a memory node template to a memory collection
+- memory_GetInitNodes: Retrieve all nodes that need initialization
+- memory_Add: Add a memory node to the specified memory tree
+- memory_Get: Retrieve a memory node from the specified path
+- memory_List: List memory nodes matching specified criteria
+- memory_Update: Update an existing memory node
+- memory_Delete: Delete a memory node with optional recursive deletion
+- memory_Batch: Batch retrieve multiple memory nodes
+- memManager_Create: Create a new memory collection with unique ID
+- memManager_ApplyTemplate: Apply a memory node template to a memory collection
 
 ## Example Workflow
 
 ### Get memory node content
-1. Use \`memory.List\` to get all memory nodes
-2. Use \`memory.Get\` to get the content of a specific memory node
+1. Use \`memory_List\` to get all memory nodes
+2. Use \`memory_Get\` to get the content of a specific memory node
 
 ### Create a new memory collection
-1. First use \`memManager.Create\` to create a new memory collection
-2. Then use \`memory.Add\` to add memory nodes
-3. Use \`memory.Get\` to retrieve specific node content
-4. Browse the memory tree structure with \`memory.List\`
+1. First use \`memManager_Create\` to create a new memory collection
+2. Then use \`memory_Add\` to add memory nodes
+3. Use \`memory_Get\` to retrieve specific node content
+4. Browse the memory tree structure with \`memory_List\`
 
 ### Apply a memory node template
-1. Use \`memManager.ApplyTemplate\` to apply a memory node template to a memory collection
-2. Use \`memory.Update\` to update the memory node
-3. Use \`memory.Get\` to retrieve specific node content
-4. Browse the memory tree structure with \`memory.List\`
+1. Use \`memManager_ApplyTemplate\` to apply a memory node template to a memory collection
+2. Use \`memory_Update\` to update the memory node
+3. Use \`memory_Get\` to retrieve specific node content
+4. Browse the memory tree structure with \`memory_List\`
 
 ### Update memory node content
-1. Use \`memory.List\` to get all memory nodes
-2. Use \`memory.Get\` to get the content of a specific memory node
-3. Use \`memory.Update\` to update the content of a specific memory node
+1. Use \`memory_List\` to get all memory nodes
+2. Use \`memory_Get\` to get the content of a specific memory node
+3. Use \`memory_Update\` to update the content of a specific memory node
 
 
 `;

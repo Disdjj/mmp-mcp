@@ -292,7 +292,6 @@ class MemoryService {
 
       return result.result;
     } catch (error) {
-      console.error(`RPC request failed for method ${method}:`, error);
       throw error;
     }
   }

@@ -205,7 +205,7 @@ const applyTemplateSchema = z.object({
 const tools = [
   // memory.GetInitNodes
   {
-    name: "memory.GetInitNodes",
+    name: "memory_GetInitNodes",
     description:
       "Retrieves all nodes marked as needing initialization from the specified memory tree",
     parameters: getInitNodesSchema,
@@ -221,7 +221,7 @@ const tools = [
 
   // memory.Add
   {
-    name: "memory.Add",
+    name: "memory_Add",
     description: "Adds a new memory node to the specified memory tree",
     parameters: addNodeSchema,
     execute: async (args: z.infer<typeof addNodeSchema>) => {
@@ -236,7 +236,7 @@ const tools = [
 
   // memory.Get
   {
-    name: "memory.Get",
+    name: "memory_Get",
     description:
       "Retrieves the content of a specific node path from the specified memory tree",
     parameters: getNodeSchema,
@@ -263,7 +263,7 @@ const tools = [
 
   // memory.List
   {
-    name: "memory.List",
+    name: "memory_List",
     description:
       "Retrieves a list of memory nodes matching the specified conditions from the memory tree",
     parameters: listNodesSchema,
@@ -279,7 +279,7 @@ const tools = [
 
   // memory.Update
   {
-    name: "memory.Update",
+    name: "memory_Update",
     description:
       "Updates the content of a specific node path in the specified memory tree",
     parameters: updateNodeSchema,
@@ -295,7 +295,7 @@ const tools = [
 
   // memory.Delete
   {
-    name: "memory.Delete",
+    name: "memory_Delete",
     description:
       "Deletes a specific node path from the specified memory tree, with optional recursive deletion",
     parameters: deleteNodeSchema,
@@ -311,7 +311,7 @@ const tools = [
 
   // memory.Batch
   {
-    name: "memory.Batch",
+    name: "memory_Batch",
     description: "Batch retrieves multiple memory nodes in a single operation",
     parameters: batchGetNodesSchema,
     execute: async (args: z.infer<typeof batchGetNodesSchema>) => {
@@ -326,7 +326,7 @@ const tools = [
 
   // memManager.Create
   {
-    name: "memManager.Create",
+    name: "memManager_Create",
     description:
       "Creates a new memory collection with a unique ID, name, and description",
     parameters: createMemorySchema,
@@ -342,7 +342,7 @@ const tools = [
 
   // memManager.ApplyTemplate
   {
-    name: "memManager.ApplyTemplate",
+    name: "memManager_ApplyTemplate",
     description:
       "Applies a set of predefined memory node templates to the specified memory collection",
     parameters: applyTemplateSchema,
