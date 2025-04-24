@@ -1,132 +1,205 @@
-import { z } from 'zod';
-import { memoryService } from '../services/memoryService.js';
-import { ContentType } from '../types/index.js';
+import { z } from "zod";
+import { memoryService } from "../services/memoryService.js";
+import { ContentType } from "../types/index.js";
 
-// 工具定义
+// Tool definitions
 
 /**
- * memory.GetInitNodes 工具 - 获取所有待初始化节点
+ * memory.GetInitNodes tool - Get all nodes that need initialization
  */
 const getInitNodesSchema = z.object({
-  memoryId: z.string().describe('目标记忆集合的ID，格式为mm-{uuid}'),
-  filter: z.object({
-    path: z.string().optional().describe('路径前缀过滤')
-  }).optional().describe('过滤条件')
+  memoryId: z
+    .string()
+    .describe("Target memory collection ID in the format mm-{uuid}"),
+  filter: z
+    .object({
+      path: z.string().optional().describe("Path prefix filter"),
+    })
+    .optional()
+    .describe("Filter conditions"),
 });
 
 /**
- * memory.Add 工具 - 添加记忆
+ * memory.Add tool - Add a memory node
  */
 const addNodeSchema = z.object({
-  memoryId: z.string().describe('目标记忆集合的ID，格式为mm-{uuid}'),
-  node: z.object({
-    name: z.string().describe('节点名称'),
-    description: z.string().optional().describe('节点描述'),
-    path: z.string().describe('节点路径，形如层级结构'),
-    attention: z.string().optional().describe('特别说明'),
-    needInit: z.boolean().optional().describe('是否需要初始化'),
-    format: z.string().optional().describe('该节点下子节点的格式要求'),
-    type: z.enum(['json', 'markdown', 'xml', 'plaintext']).describe('内容类型'),
-    content: z.string().describe('节点内容')
-  }).describe('要添加的记忆节点')
+  memoryId: z
+    .string()
+    .describe("Target memory collection ID in the format mm-{uuid}"),
+  node: z
+    .object({
+      name: z.string().describe("Node name"),
+      description: z.string().optional().describe("Node description"),
+      path: z.string().describe("Node path in hierarchical structure"),
+      attention: z.string().optional().describe("Special notes"),
+      needInit: z
+        .boolean()
+        .optional()
+        .describe("Whether initialization is needed"),
+      format: z
+        .string()
+        .optional()
+        .describe("Format requirements for child nodes"),
+      type: z
+        .enum(["json", "markdown", "xml", "plaintext"])
+        .describe("Content type"),
+      content: z.string().describe("Node content"),
+    })
+    .describe("Memory node to add"),
 });
 
 /**
- * memory.Get 工具 - 获取记忆
+ * memory.Get tool - Retrieve a memory node
  */
 const getNodeSchema = z.object({
-  memoryId: z.string().describe('目标记忆集合的ID，格式为mm-{uuid}'),
-  path: z.string().describe('要获取的记忆节点的路径'),
-  outputFormat: z.enum(['xml', 'json', 'text']).optional().default('text').describe('输出格式')
+  memoryId: z
+    .string()
+    .describe("Target memory collection ID in the format mm-{uuid}"),
+  path: z.string().describe("Path of the memory node to retrieve"),
+  outputFormat: z
+    .enum(["xml", "json", "text"])
+    .optional()
+    .default("text")
+    .describe("Output format"),
 });
 
 /**
- * memory.List 工具 - 获取记忆列表
+ * memory.List tool - Get a list of memory nodes
  */
 const listNodesSchema = z.object({
-  memoryId: z.string().describe('目标记忆集合的ID，格式为mm-{uuid}'),
-  filter: z.object({
-    path: z.string().optional().describe('路径前缀过滤'),
-    type: z.enum(['json', 'markdown', 'xml', 'plaintext']).optional().describe('记忆类型过滤'),
-    needInit: z.boolean().optional().describe('是否需要初始化')
-  }).optional().describe('过滤条件'),
-  pagination: z.object({
-    offset: z.number().optional().default(0).describe('偏移量'),
-    limit: z.number().optional().default(50).describe('限制数量')
-  }).optional().describe('分页参数')
+  memoryId: z
+    .string()
+    .describe("Target memory collection ID in the format mm-{uuid}"),
+  filter: z
+    .object({
+      path: z.string().optional().describe("Path prefix filter"),
+      type: z
+        .enum(["json", "markdown", "xml", "plaintext"])
+        .optional()
+        .describe("Memory type filter"),
+      needInit: z
+        .boolean()
+        .optional()
+        .describe("Whether initialization is needed"),
+    })
+    .optional()
+    .describe("Filter conditions"),
+  pagination: z
+    .object({
+      offset: z.number().optional().default(0).describe("Offset"),
+      limit: z.number().optional().default(50).describe("Limit"),
+    })
+    .optional()
+    .describe("Pagination parameters"),
 });
 
 /**
- * memory.Update 工具 - 更新记忆
+ * memory.Update tool - Update a memory node
  */
 const updateNodeSchema = z.object({
-  memoryId: z.string().describe('目标记忆集合的ID，格式为mm-{uuid}'),
-  path: z.string().describe('要更新的记忆节点的路径'),
-  updates: z.object({
-    name: z.string().optional().describe('节点名称'),
-    description: z.string().optional().describe('节点描述'),
-    content: z.string().optional().describe('节点内容'),
-    attention: z.string().optional().describe('特别说明'),
-    format: z.string().optional().describe('格式要求'),
-    needInit: z.boolean().optional().describe('是否需要初始化')
-  }).describe('要更新的字段')
+  memoryId: z
+    .string()
+    .describe("Target memory collection ID in the format mm-{uuid}"),
+  path: z.string().describe("Path of the memory node to update"),
+  updates: z
+    .object({
+      name: z.string().optional().describe("Node name"),
+      description: z.string().optional().describe("Node description"),
+      content: z.string().optional().describe("Node content"),
+      attention: z.string().optional().describe("Special notes"),
+      format: z.string().optional().describe("Format requirements"),
+      needInit: z
+        .boolean()
+        .optional()
+        .describe("Whether initialization is needed"),
+    })
+    .describe("Fields to update"),
 });
 
 /**
- * memory.Delete 工具 - 删除记忆
+ * memory.Delete tool - Delete a memory node
  */
 const deleteNodeSchema = z.object({
-  memoryId: z.string().describe('目标记忆集合的ID，格式为mm-{uuid}'),
-  path: z.string().describe('要删除的记忆节点的路径'),
-  recursive: z.boolean().optional().default(false).describe('是否递归删除子节点')
+  memoryId: z
+    .string()
+    .describe("Target memory collection ID in the format mm-{uuid}"),
+  path: z.string().describe("Path of the memory node to delete"),
+  recursive: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe("Whether to recursively delete child nodes"),
 });
 
 /**
- * memory.Batch 工具 - 批量获取记忆节点
+ * memory.Batch tool - Batch retrieve memory nodes
  */
 const batchGetNodesSchema = z.object({
-  requests: z.array(
-    z.object({
-      memoryId: z.string().describe('记忆ID'),
-      path: z.string().describe('记忆节点的路径')
-    })
-  ).describe('一个包含多个获取请求的数组，每个请求指定要获取的记忆节点')
+  requests: z
+    .array(
+      z.object({
+        memoryId: z.string().describe("Memory ID"),
+        path: z.string().describe("Path of the memory node"),
+      })
+    )
+    .describe(
+      "An array of retrieval requests, each specifying a memory node to retrieve"
+    ),
 });
 
 /**
- * memManager.Create 工具 - 创建新的记忆树ID
+ * memManager.Create tool - Create a new memory collection
  */
 const createMemorySchema = z.object({
-  name: z.string().describe('记忆集合的名称'),
-  description: z.string().describe('记忆集合的简短描述'),
-  metadata: z.record(z.any()).optional().describe('记忆集合的元数据')
+  name: z.string().describe("Name of the memory collection"),
+  description: z
+    .string()
+    .describe("Brief description of the memory collection"),
+  metadata: z
+    .record(z.any())
+    .optional()
+    .describe("Metadata of the memory collection"),
 });
 
 /**
- * memManager.ApplyTemplate 工具 - 为记忆ID应用模板
+ * memManager.ApplyTemplate tool - Apply templates to a memory collection
  */
 const applyTemplateSchema = z.object({
-  memoryId: z.string().describe('目标记忆集合的ID，格式为mm-{uuid}'),
-  template: z.array(
-    z.object({
-      name: z.string().describe('节点名称'),
-      description: z.string().optional().describe('节点描述'),
-      path: z.string().describe('节点路径'),
-      attention: z.string().optional().describe('特别说明'),
-      needInit: z.boolean().describe('是否需要初始化，如为true则content不允许为空'),
-      format: z.string().optional().describe('格式要求'),
-      type: z.enum(['json', 'markdown', 'xml', 'plaintext']).describe('内容类型'),
-      content: z.string().optional().describe('节点内容，若needInit为true则不能为空')
-    })
-  ).describe('要应用的记忆节点模板列表')
+  memoryId: z
+    .string()
+    .describe("Target memory collection ID in the format mm-{uuid}"),
+  template: z
+    .array(
+      z.object({
+        name: z.string().describe("Node name"),
+        description: z.string().optional().describe("Node description"),
+        path: z.string().describe("Node path"),
+        attention: z.string().optional().describe("Special notes"),
+        needInit: z
+          .boolean()
+          .describe(
+            "Whether initialization is needed, if true content cannot be empty"
+          ),
+        format: z.string().optional().describe("Format requirements"),
+        type: z
+          .enum(["json", "markdown", "xml", "plaintext"])
+          .describe("Content type"),
+        content: z
+          .string()
+          .optional()
+          .describe("Node content, must not be empty if needInit is true"),
+      })
+    )
+    .describe("List of memory node templates to apply"),
 });
 
-// 定义工具数组
+// Define tools array
 const tools = [
   // memory.GetInitNodes
   {
-    name: 'memory.GetInitNodes',
-    description: '获取所有待初始化节点',
+    name: "memory.GetInitNodes",
+    description:
+      "Retrieves all nodes marked as needing initialization from the specified memory tree",
     parameters: getInitNodesSchema,
     execute: async (args: z.infer<typeof getInitNodesSchema>) => {
       try {
@@ -140,8 +213,8 @@ const tools = [
 
   // memory.Add
   {
-    name: 'memory.Add',
-    description: '向指定的记忆树中添加新的记忆节点',
+    name: "memory.Add",
+    description: "Adds a new memory node to the specified memory tree",
     parameters: addNodeSchema,
     execute: async (args: z.infer<typeof addNodeSchema>) => {
       try {
@@ -155,25 +228,24 @@ const tools = [
 
   // memory.Get
   {
-    name: 'memory.Get',
-    description: '获取指定记忆树中特定路径节点的内容',
+    name: "memory.Get",
+    description:
+      "Retrieves the content of a specific node path from the specified memory tree",
     parameters: getNodeSchema,
     execute: async (args: z.infer<typeof getNodeSchema>) => {
       try {
         const node = await memoryService.getNode(args);
 
-        if (args.outputFormat === 'json') {
+        if (args.outputFormat === "json") {
           return JSON.stringify(node, null, 2);
-        } else if (args.outputFormat === 'xml') {
-          // 简单的XML转换，实际项目中可以使用专门的XML库
-          let xml = `<node path="${node.path}" name="${node.name}" type="${node.type}">\n`;
-          if (node.description) xml += `  <description>${node.description}</description>\n`;
-          if (node.content) xml += `  <content>${node.content}</content>\n`;
-          xml += '</node>';
-          return xml;
         } else {
-          // 文本格式
-          return `路径: ${node.path}\n名称: ${node.name}\n类型: ${node.type}\n描述: ${node.description || ''}\n内容:\n${node.content || ''}`;
+          // Simple XML conversion, in actual projects a dedicated XML library would be used
+          let xml = `<node path="${node.path}" name="${node.name}" type="${node.type}">\n`;
+          if (node.description)
+            xml += `  <description>${node.description}</description>\n`;
+          if (node.content) xml += `  <content>${node.content}</content>\n`;
+          xml += "</node>";
+          return xml;
         }
       } catch (error: any) {
         return `Error: ${error.message}`;
@@ -183,8 +255,9 @@ const tools = [
 
   // memory.List
   {
-    name: 'memory.List',
-    description: '获取指定记忆树中符合条件的记忆节点列表',
+    name: "memory.List",
+    description:
+      "Retrieves a list of memory nodes matching the specified conditions from the memory tree",
     parameters: listNodesSchema,
     execute: async (args: z.infer<typeof listNodesSchema>) => {
       try {
@@ -198,8 +271,9 @@ const tools = [
 
   // memory.Update
   {
-    name: 'memory.Update',
-    description: '更新指定记忆树中特定路径节点的内容',
+    name: "memory.Update",
+    description:
+      "Updates the content of a specific node path in the specified memory tree",
     parameters: updateNodeSchema,
     execute: async (args: z.infer<typeof updateNodeSchema>) => {
       try {
@@ -213,8 +287,9 @@ const tools = [
 
   // memory.Delete
   {
-    name: 'memory.Delete',
-    description: '删除指定记忆树中特定路径的记忆节点',
+    name: "memory.Delete",
+    description:
+      "Deletes a specific node path from the specified memory tree, with optional recursive deletion",
     parameters: deleteNodeSchema,
     execute: async (args: z.infer<typeof deleteNodeSchema>) => {
       try {
@@ -228,8 +303,8 @@ const tools = [
 
   // memory.Batch
   {
-    name: 'memory.Batch',
-    description: '批量获取记忆节点',
+    name: "memory.Batch",
+    description: "Batch retrieves multiple memory nodes in a single operation",
     parameters: batchGetNodesSchema,
     execute: async (args: z.infer<typeof batchGetNodesSchema>) => {
       try {
@@ -243,8 +318,9 @@ const tools = [
 
   // memManager.Create
   {
-    name: 'memManager.Create',
-    description: '创建新的记忆树ID',
+    name: "memManager.Create",
+    description:
+      "Creates a new memory collection with a unique ID, name, and description",
     parameters: createMemorySchema,
     execute: async (args: z.infer<typeof createMemorySchema>) => {
       try {
@@ -258,8 +334,9 @@ const tools = [
 
   // memManager.ApplyTemplate
   {
-    name: 'memManager.ApplyTemplate',
-    description: '为指定的记忆ID应用一组记忆节点模板',
+    name: "memManager.ApplyTemplate",
+    description:
+      "Applies a set of predefined memory node templates to the specified memory collection",
     parameters: applyTemplateSchema,
     execute: async (args: z.infer<typeof applyTemplateSchema>) => {
       try {
