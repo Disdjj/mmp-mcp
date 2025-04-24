@@ -1,50 +1,240 @@
-import {
-  Memory,
-  MemoryNode,
-  AddNodeRequest,
-  AddNodeResponse,
-  GetNodeRequest,
-  UpdateNodeRequest,
-  UpdateNodeResponse,
-  DeleteNodeRequest,
-  DeleteNodeResponse,
-  ListNodesRequest,
-  ListNodesResponse,
-  CreateMemoryRequest,
-  CreateMemoryResponse,
-  ApplyTemplateRequest,
-  ApplyTemplateResponse,
-  BatchGetRequest,
-  GetInitNodesRequest,
-  GetInitNodesResponse,
-  MemoryTemplateNode
-} from '../types/index.js';
+import { v4 as uuidv4 } from 'uuid';
 
-import {
-  initStorage,
-  generateMemoryId,
-  getMemory,
-  saveMemory,
-  getNode,
-  saveNode,
-  deleteNode,
-  getAllNodes,
-  getFilteredNodes,
-  getChildNodePaths,
-  nodePathExists,
-  getAllMemories
-} from '../utils/storage.js';
+/**
+ * JSON-RPC请求类型定义
+ */
+interface JsonRpcRequest {
+  jsonrpc: string;
+  id: string;
+  method: string;
+  params: any;
+}
+
+/**
+ * JSON-RPC响应类型定义
+ */
+interface JsonRpcResponse {
+  jsonrpc: string;
+  id: string;
+  result?: any;
+  error?: {
+    code: number;
+    message: string;
+    data?: any;
+  };
+}
+
+/**
+ * Memory接口定义
+ */
+export interface Memory {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt?: string;
+  metadata?: any;
+}
+
+/**
+ * 记忆节点接口定义
+ */
+export interface MemoryNode {
+  path: string;
+  name: string;
+  description?: string;
+  attention?: string;
+  needInit?: boolean;
+  format?: string;
+  type: 'json' | 'markdown' | 'xml' | 'plaintext';
+  content?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * 记忆模板节点接口定义
+ */
+export interface MemoryTemplateNode {
+  name: string;
+  description?: string;
+  path: string;
+  attention?: string;
+  needInit: boolean;
+  format?: string;
+  type: 'json' | 'markdown' | 'xml' | 'plaintext';
+  content?: string;
+}
+
+/**
+ * GetInitNodes请求参数
+ */
+export interface GetInitNodesRequest {
+  memoryId: string;
+  filter?: {
+    path?: string;
+  };
+}
+
+/**
+ * GetInitNodes响应结果
+ */
+export interface GetInitNodesResponse {
+  nodes: Array<{
+    path: string;
+    name: string;
+    description: string;
+    attention: string;
+  }>;
+}
+
+/**
+ * AddNode请求参数
+ */
+export interface AddNodeRequest {
+  memoryId: string;
+  node: MemoryNode;
+}
+
+/**
+ * AddNode响应结果
+ */
+export interface AddNodeResponse {
+  path: string;
+}
+
+/**
+ * GetNode请求参数
+ */
+export interface GetNodeRequest {
+  memoryId: string;
+  path: string;
+  outputFormat?: 'xml' | 'json' | 'text';
+}
+
+/**
+ * ListNodes请求参数
+ */
+export interface ListNodesRequest {
+  memoryId: string;
+  filter?: {
+    path?: string;
+    type?: string;
+    needInit?: boolean;
+  };
+  pagination?: {
+    offset?: number;
+    limit?: number;
+  };
+}
+
+/**
+ * ListNodes响应结果
+ */
+export interface ListNodesResponse {
+  total: number;
+  nodes: Array<{
+    path: string;
+    name: string;
+    description: string;
+  }>;
+}
+
+/**
+ * UpdateNode请求参数
+ */
+export interface UpdateNodeRequest {
+  memoryId: string;
+  path: string;
+  updates: {
+    name?: string;
+    description?: string;
+    content?: string;
+    attention?: string;
+    format?: string;
+    needInit?: boolean;
+  };
+}
+
+/**
+ * UpdateNode响应结果
+ */
+export interface UpdateNodeResponse {
+  path: string;
+  updatedAt: string;
+}
+
+/**
+ * DeleteNode请求参数
+ */
+export interface DeleteNodeRequest {
+  memoryId: string;
+  path: string;
+  recursive?: boolean;
+}
+
+/**
+ * DeleteNode响应结果
+ */
+export interface DeleteNodeResponse {
+  success: boolean;
+  deletedCount: number;
+}
+
+/**
+ * BatchGet请求参数
+ */
+export interface BatchGetRequest {
+  requests: Array<{
+    memoryId: string;
+    path: string;
+  }>;
+}
+
+/**
+ * CreateMemory请求参数
+ */
+export interface CreateMemoryRequest {
+  name: string;
+  description: string;
+  metadata?: any;
+}
+
+/**
+ * CreateMemory响应结果
+ */
+export interface CreateMemoryResponse {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+}
+
+/**
+ * ApplyTemplate请求参数
+ */
+export interface ApplyTemplateRequest {
+  memoryId: string;
+  template: MemoryTemplateNode[];
+}
+
+/**
+ * ApplyTemplate响应结果
+ */
+export interface ApplyTemplateResponse {
+  memoryId: string;
+  success: boolean;
+  createdNodes: Array<{
+    path: string;
+    needInit: boolean;
+  }>;
+}
 
 /**
  * 记忆管理服务
  */
 class MemoryService {
   private defaultMemoryId: string = '';
-
-  constructor() {
-    // 初始化存储
-    this.init();
-  }
 
   /**
    * 设置默认记忆ID
@@ -61,39 +251,63 @@ class MemoryService {
   }
 
   /**
-   * 初始化服务
+   * 发送RPC请求
+   * @param method RPC方法名
+   * @param params 参数对象
+   * @returns Promise<any>
    */
-  private async init(): Promise<void> {
-    await initStorage();
+  private async sendRpcRequest(method: string, params: any): Promise<any> {
+    const rpcEndpoint = process.env.MMP_RPC_ENDPOINT;
+    if (!rpcEndpoint) {
+      throw new Error('RPC endpoint not configured');
+    }
+
+    try {
+      const request: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: uuidv4(),
+        method,
+        params
+      };
+
+      const response = await fetch(rpcEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const result: JsonRpcResponse = await response.json();
+
+      if (result.error) {
+        throw new Error(`RPC error: ${result.error.message || JSON.stringify(result.error)}`);
+      }
+
+      return result.result;
+    } catch (error) {
+      console.error(`RPC request failed for method ${method}:`, error);
+      throw error;
+    }
   }
 
   /**
    * 创建新的记忆集合
+   * @param params 创建记忆集合的参数
+   * @returns Promise<CreateMemoryResponse>
    */
   async createMemory(params: CreateMemoryRequest): Promise<CreateMemoryResponse> {
-    const id = generateMemoryId();
-    const now = new Date().toISOString();
-
-    const memory: Memory = {
-      id,
-      name: params.name,
-      description: params.description,
-      createdAt: now,
-      metadata: params.metadata
-    };
-
-    await saveMemory(memory);
-
-    return {
-      id: memory.id,
-      name: memory.name,
-      description: memory.description,
-      createdAt: memory.createdAt
-    };
+    return this.sendRpcRequest('memManager.Create', params);
   }
 
   /**
    * 获取待初始化节点
+   * @param params 获取待初始化节点的参数
+   * @returns Promise<GetInitNodesResponse>
    */
   async getInitNodes(params: GetInitNodesRequest): Promise<GetInitNodesResponse> {
     // 如果没有指定memoryId，使用默认值
@@ -102,29 +316,16 @@ class MemoryService {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    const { filter } = params;
-
-    // 验证记忆ID是否存在
-    const memory = await getMemory(memoryId);
-    if (!memory) {
-      throw new Error(`Memory ${memoryId} not found`);
-    }
-
-    // 获取所有待初始化节点
-    const nodes = await getFilteredNodes(memoryId, filter?.path, undefined, true);
-
-    return {
-      nodes: nodes.map(node => ({
-        path: node.path,
-        name: node.name,
-        description: node.description || '',
-        attention: node.attention || ''
-      }))
-    };
+    return this.sendRpcRequest('memory.GetInitNodes', {
+      ...params,
+      memoryId
+    });
   }
 
   /**
    * 添加记忆节点
+   * @param params 添加记忆节点的参数
+   * @returns Promise<AddNodeResponse>
    */
   async addNode(params: AddNodeRequest): Promise<AddNodeResponse> {
     // 如果没有指定memoryId，使用默认值
@@ -133,30 +334,16 @@ class MemoryService {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    const { node } = params;
-
-    // 验证记忆ID是否存在
-    const memory = await getMemory(memoryId);
-    if (!memory) {
-      throw new Error(`Memory ${memoryId} not found`);
-    }
-
-    // 检查路径是否已存在
-    const exists = await nodePathExists(memoryId, node.path);
-    if (exists) {
-      throw new Error(`Node path ${node.path} already exists in memory ${memoryId}`);
-    }
-
-    // 保存节点
-    await saveNode(memoryId, node);
-
-    return {
-      path: node.path
-    };
+    return this.sendRpcRequest('memory.Add', {
+      ...params,
+      memoryId
+    });
   }
 
   /**
    * 获取记忆节点
+   * @param params 获取记忆节点的参数
+   * @returns Promise<MemoryNode>
    */
   async getNode(params: GetNodeRequest): Promise<MemoryNode> {
     // 如果没有指定memoryId，使用默认值
@@ -165,25 +352,16 @@ class MemoryService {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    const { path } = params;
-
-    // 验证记忆ID是否存在
-    const memory = await getMemory(memoryId);
-    if (!memory) {
-      throw new Error(`Memory ${memoryId} not found`);
-    }
-
-    // 获取节点
-    const node = await getNode(memoryId, path);
-    if (!node) {
-      throw new Error(`Node ${path} not found in memory ${memoryId}`);
-    }
-
-    return node;
+    return this.sendRpcRequest('memory.Get', {
+      ...params,
+      memoryId
+    });
   }
 
   /**
    * 获取记忆节点列表
+   * @param params 获取记忆节点列表的参数
+   * @returns Promise<ListNodesResponse>
    */
   async listNodes(params: ListNodesRequest): Promise<ListNodesResponse> {
     // 如果没有指定memoryId，使用默认值
@@ -192,39 +370,16 @@ class MemoryService {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    const { filter, pagination } = params;
-
-    // 验证记忆ID是否存在
-    const memory = await getMemory(memoryId);
-    if (!memory) {
-      throw new Error(`Memory ${memoryId} not found`);
-    }
-
-    // 获取符合条件的节点
-    const nodes = await getFilteredNodes(
-      memoryId,
-      filter?.path,
-      filter?.type,
-      filter?.needInit
-    );
-
-    // 应用分页
-    const offset = pagination?.offset || 0;
-    const limit = pagination?.limit || 50;
-    const pagedNodes = nodes.slice(offset, offset + limit);
-
-    return {
-      total: nodes.length,
-      nodes: pagedNodes.map(node => ({
-        path: node.path,
-        name: node.name,
-        description: node.description || ''
-      }))
-    };
+    return this.sendRpcRequest('memory.List', {
+      ...params,
+      memoryId
+    });
   }
 
   /**
    * 更新记忆节点
+   * @param params 更新记忆节点的参数
+   * @returns Promise<UpdateNodeResponse>
    */
   async updateNode(params: UpdateNodeRequest): Promise<UpdateNodeResponse> {
     // 如果没有指定memoryId，使用默认值
@@ -233,38 +388,16 @@ class MemoryService {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    const { path, updates } = params;
-
-    // 验证记忆ID是否存在
-    const memory = await getMemory(memoryId);
-    if (!memory) {
-      throw new Error(`Memory ${memoryId} not found`);
-    }
-
-    // 获取现有节点
-    const existingNode = await getNode(memoryId, path);
-    if (!existingNode) {
-      throw new Error(`Node ${path} not found in memory ${memoryId}`);
-    }
-
-    // 更新节点
-    const updatedNode: MemoryNode = {
-      ...existingNode,
-      ...updates,
-      path // 确保路径不变
-    };
-
-    // 保存更新后的节点
-    const savedNode = await saveNode(memoryId, updatedNode);
-
-    return {
-      path: savedNode.path,
-      updatedAt: savedNode.updatedAt!
-    };
+    return this.sendRpcRequest('memory.Update', {
+      ...params,
+      memoryId
+    });
   }
 
   /**
    * 删除记忆节点
+   * @param params 删除记忆节点的参数
+   * @returns Promise<DeleteNodeResponse>
    */
   async deleteNode(params: DeleteNodeRequest): Promise<DeleteNodeResponse> {
     // 如果没有指定memoryId，使用默认值
@@ -273,52 +406,16 @@ class MemoryService {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    const { path, recursive } = params;
-
-    // 验证记忆ID是否存在
-    const memory = await getMemory(memoryId);
-    if (!memory) {
-      throw new Error(`Memory ${memoryId} not found`);
-    }
-
-    // 获取现有节点
-    const existingNode = await getNode(memoryId, path);
-    if (!existingNode) {
-      throw new Error(`Node ${path} not found in memory ${memoryId}`);
-    }
-
-    // 需要删除的路径列表
-    const pathsToDelete: string[] = [path];
-
-    // 如果递归删除，获取所有子节点
-    if (recursive) {
-      const childPaths = await getChildNodePaths(memoryId, path);
-      pathsToDelete.push(...childPaths);
-    } else {
-      // 非递归删除，检查是否有子节点
-      const childPaths = await getChildNodePaths(memoryId, path);
-      if (childPaths.length > 0) {
-        throw new Error(`Cannot delete node ${path} with children without recursive flag`);
-      }
-    }
-
-    // 删除所有路径
-    let deletedCount = 0;
-    for (const pathToDelete of pathsToDelete) {
-      const success = await deleteNode(memoryId, pathToDelete);
-      if (success) {
-        deletedCount++;
-      }
-    }
-
-    return {
-      success: deletedCount > 0,
-      deletedCount
-    };
+    return this.sendRpcRequest('memory.Delete', {
+      ...params,
+      memoryId
+    });
   }
 
   /**
-   * 应用模板到记忆ID
+   * 为指定的记忆ID应用一组记忆节点模板
+   * @param params 应用模板的参数
+   * @returns Promise<ApplyTemplateResponse>
    */
   async applyTemplate(params: ApplyTemplateRequest): Promise<ApplyTemplateResponse> {
     // 如果没有指定memoryId，使用默认值
@@ -327,79 +424,34 @@ class MemoryService {
       throw new Error("No memoryId provided and no default memoryId set");
     }
 
-    const { template } = params;
-
-    // 验证记忆ID是否存在
-    const memory = await getMemory(memoryId);
-    if (!memory) {
-      throw new Error(`Memory ${memoryId} not found`);
-    }
-
-    // 验证模板，如果needInit为true，则content不能为空
-    for (const node of template) {
-      if (node.needInit && (!node.content || node.content.trim() === '')) {
-        throw new Error(`Invalid template: node ${node.path} is marked as needInit but has no content`);
-      }
-    }
-
-    // 创建模板节点
-    const createdNodes: Array<{ path: string; needInit: boolean }> = [];
-
-    for (const templateNode of template) {
-      // 检查路径是否已存在
-      const exists = await nodePathExists(memoryId, templateNode.path);
-      if (exists) {
-        continue; // 跳过已存在的节点
-      }
-
-      // 保存节点
-      await saveNode(memoryId, templateNode);
-
-      createdNodes.push({
-        path: templateNode.path,
-        needInit: templateNode.needInit
-      });
-    }
-
-    return {
-      memoryId,
-      success: true,
-      createdNodes
-    };
+    return this.sendRpcRequest('memManager.ApplyTemplate', {
+      ...params,
+      memoryId
+    });
   }
 
   /**
    * 批量获取记忆节点
+   * @param params 批量获取记忆节点的参数
+   * @returns Promise<MemoryNode[]>
    */
   async batchGetNodes(params: BatchGetRequest): Promise<MemoryNode[]> {
-    const { requests } = params;
+    // 处理每个请求中可能需要的默认memoryId
+    const requests = params.requests.map(req => ({
+      ...req,
+      memoryId: req.memoryId || this.defaultMemoryId
+    }));
 
-    const results: MemoryNode[] = [];
-
-    for (const request of requests) {
-      try {
-        // 使用默认记忆ID如果未指定
-        const memoryId = request.memoryId || this.defaultMemoryId;
-        if (!memoryId) {
-          console.error("No memoryId provided and no default memoryId set for request:", request);
-          continue;
-        }
-
-        const node = await this.getNode({
-          memoryId,
-          path: request.path
-        });
-
-        if (node) {
-          results.push(node);
-        }
-      } catch (error) {
-        // 忽略错误，继续处理下一个请求
-        console.error(`Error getting node ${request.path} in memory ${request.memoryId}:`, error);
+    // 检查每个请求是否都有memoryId
+    for (const req of requests) {
+      if (!req.memoryId) {
+        throw new Error("One or more requests have no memoryId and no default memoryId is set");
       }
     }
 
-    return results;
+    return this.sendRpcRequest('memory.Batch', {
+      requests
+    });
   }
 }
 
