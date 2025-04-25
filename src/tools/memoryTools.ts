@@ -263,7 +263,7 @@ const tools = [
 
   // memory.List
   {
-    name: "memory-listy",
+    name: "memory-list",
     description:
       "Retrieves a list of memory nodes matching the specified conditions from the memory tree",
     parameters: listNodesSchema,

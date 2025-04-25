@@ -64,7 +64,7 @@ MMP addresses the core challenge of long-term memory management for Large Langua
 - memory-get-init-nodes: Retrieve all nodes that need initialization
 - memory-add: Add a memory node to the specified memory tree
 - memory-get: Retrieve a memory node from the specified path
-- memory-listy: List memory nodes matching specified criteria
+- memory-list: List memory nodes matching specified criteria
 - memory-update: Update an existing memory node
 - memory-delete: Delete a memory node with optional recursive deletion
 - memory-batch-get: Batch retrieve multiple memory nodes
@@ -74,23 +74,23 @@ MMP addresses the core challenge of long-term memory management for Large Langua
 ## Example Workflow
 
 ### Get memory node content
-1. Use \`memory-listy\` to get all memory nodes
+1. Use \`memory-list\` to get all memory nodes
 2. Use \`memory-get\` to get the content of a specific memory node
 
 ### Create a new memory collection
 1. First use \`memcolletcion-create\` to create a new memory collection
 2. Then use \`memory-add\` to add memory nodes
 3. Use \`memory-get\` to retrieve specific node content
-4. Browse the memory tree structure with \`memory-listy\`
+4. Browse the memory tree structure with \`memory-list\`
 
 ### Apply a memory node template
 1. Use \`memcolletcion-apply-template\` to apply a memory node template to a memory collection
 2. Use \`memory-update\` to update the memory node
 3. Use \`memory-get\` to retrieve specific node content
-4. Browse the memory tree structure with \`memory-listy\`
+4. Browse the memory tree structure with \`memory-list\`
 
 ### Update memory node content
-1. Use \`memory-listy\` to get all memory nodes
+1. Use \`memory-list\` to get all memory nodes
 2. Use \`memory-get\` to get the content of a specific memory node
 3. Use \`memory-update\` to update the content of a specific memory node
 
